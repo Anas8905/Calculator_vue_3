@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.headings2{
+    @apply text-sm px-3 text-white 
+}
+.btn{
+    @apply hover:bg-slate-400 m-1;
+
+}
+
+.rotat{
+    @apply rotate-180;
+}
+.headings3{
+    @apply border-2 border-sky-200 rounded-md px-2 hover:border-sky-400;
+}
+.custom-hidden{
+    @apply hidden
+}
