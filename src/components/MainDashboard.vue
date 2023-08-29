@@ -1,4 +1,3 @@
-/* eslint-disable */
 <template>
     <div>
         <!--Menu options-->
@@ -14,7 +13,7 @@
                     <button class="btn" type="button">Report</button>
                 </li>
                 <li>
-                    <button class="btn" type="button">Log Out</button>
+                    <button @click="signOut" class="btn" type="button">Log Out</button>
                 </li>
             </ul>
         </div>
@@ -51,7 +50,6 @@
                 <div style="width: 350px;"><canvas id="acquisitions"></canvas></div>
             </div>
             
-
             <!--This is Add button-->
             <div class="h-10 w-10 rounded-full absolute bottom-12 right-5 bg-red-400">
                 <svg @click="showCardsCategories" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white" class="w-5 h-5 block m-auto mt-2.5 ">
@@ -77,10 +75,6 @@
             @increment-expense="evaluateTotalExpense" 
         />
 
-        <UserAccountSettings 
-            v-show="showAccSet === false"
-            @hide-acc-set="toggleAccSetFun" 
-        />
         
         <CategoriesSettings 
             v-if="showAddRemSet === false"
@@ -92,6 +86,11 @@
             @update-expense-category="updateExpenses" 
             @hide-add-remove-set="showAddRemSetFun" 
         />
+
+        <UserAccountSettings 
+            v-show="showAccSet === false"
+            @hide-acc-set="toggleAccSetFun" 
+        />
     </div>
 </template>
 
@@ -102,9 +101,11 @@ import BudgetAccountsSettings from './BudgetAccountsSettings.vue';
 import UserAccountSettings from './UserAccountSettings.vue'
 import CategoriesSettings from './CategoriesSettings.vue'
 import Chart from 'chart.js/auto';
+import { getAuth, signOut } from "firebase/auth";
 
 export default {
     name: 'MainDashboard',
+
 
     emits: ['increment-expense', 'increment-income', 'delete-from-expenses', 'update-expense-category', 'hide-add-remove-set', 'update-income-category'],
 
@@ -136,7 +137,7 @@ export default {
             showOptions: true,
             showAccSet: true,
             showAddRemSet: true,
-            chartObj: null
+            chartObj: null,
         }
     },
 
@@ -226,6 +227,15 @@ export default {
             this.headingsForDetails[1].ammount = this.headingsForDetails[1].ammount + parseInt(data.ammount)
             this.headingsForDetails[2].ammount = this.headingsForDetails[2].ammount - parseInt(data.ammount)
         },
+        signOut(){
+            const auth = getAuth();
+            signOut(auth).then(() => {
+            // Sign-out successful.
+            this.$emit('signedOut')
+            }).catch((error) => {
+            // An error happened.
+            });
+        }
     },
 }
 </script>

@@ -20,3 +20,6 @@
 .custom-hidden{
     @apply hidden
 }
+.inpt{
+    @apply border-2 rounded-md border-gray-200 bg-gray-100 w-52;  
+}
