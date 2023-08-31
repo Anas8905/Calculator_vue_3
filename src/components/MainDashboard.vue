@@ -33,21 +33,27 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
             </div>
-
-            <!--Headdings-->
-            <div>
-                <div class="inline-flex justify-evenly w-full bg-gray-500 rounded">
-                    <h2 v-for="(heading,index) in headingsForDetails" :key="index" class="headings2">{{heading.name}} {{ heading.ammount }}</h2>
-
                     <!--Bottom Options-->
+            <div>
                     <div class="text-white flex justify-evenly absolute inset-x-0 bottom-0 h-7 bg-gray-700 w-auto">
                         <h3>Stats</h3>
                         <h3>Wallets</h3>
                         <h3>Transactions</h3>
                         <h3>More</h3>
                     </div>
-                </div>
-                <div style="width: 350px;"><canvas id="acquisitions"></canvas></div>
+            </div>
+                <div class="hidden" style="width: 350px;"><canvas id="acquisitions"></canvas></div>
+
+            <!--Accounts Add/Remove-->
+            <div>
+                <h2 class="ml-2 mb-2">Add Account</h2>
+                <input v-model="item" type="text">
+                <button @click="addAccountIDinDatabase" type="button">add</button>
+                <ul v-for="(item,index) in accountsTypes" :key="index">
+                    <li class="m-2">
+                        {{ item }}
+                    </li>
+                </ul>
             </div>
             
             <!--This is Add button-->
@@ -74,7 +80,6 @@
             @increment-income="evaluateTotalIncome" 
             @increment-expense="evaluateTotalExpense" 
         />
-
         
         <CategoriesSettings 
             v-if="showAddRemSet === false"
@@ -87,7 +92,7 @@
             @hide-add-remove-set="showAddRemSetFun" 
         />
 
-        <UserAccountSettings 
+        <UserAccountSettings  
             v-show="showAccSet === false"
             @hide-acc-set="toggleAccSetFun" 
         />
@@ -96,19 +101,23 @@
 
 <!--Script Starts From Here-->
 <script>
-/* eslint-disable */
+import {v4 as uuidv4} from 'uuid';
 import BudgetAccountsSettings from './BudgetAccountsSettings.vue';
 import UserAccountSettings from './UserAccountSettings.vue'
 import CategoriesSettings from './CategoriesSettings.vue'
-import Chart from 'chart.js/auto';
+// import Chart from 'chart.js/auto';
 import { getAuth, signOut } from "firebase/auth";
+import { getDatabase, ref, onValue, set } from "firebase/database";
 
 export default {
     name: 'MainDashboard',
-
-
-    emits: ['increment-expense', 'increment-income', 'delete-from-expenses', 'update-expense-category', 'hide-add-remove-set', 'update-income-category'],
-
+    
+    emits: [
+            'increment-expense', 'increment-income', 
+            'delete-from-expenses', 'update-expense-category', 
+            'hide-add-remove-set', 'update-income-category'
+            ],
+    
     components: {
         BudgetAccountsSettings,
         UserAccountSettings,
@@ -117,46 +126,14 @@ export default {
 
     data() {
         return {
-            headingsForDetails: [
-                { name: 'Income', ammount: 0 },
-                { name: 'Expense', ammount: 0 },
-                { name: 'Total', ammount: 0 }
-            ],
-            explicitExpenseCategories: [
-                { category: 'Groceries', ammount: 0 },
-                { category: 'Housing', ammount: 0 },
-                { category: 'Transport', ammount: 0 },
-                { category: 'Education', ammount: 0 },
-            ],
-            explicitIncomeCategories: [
-                { category: 'Salary', ammount: 0 },
-                { category: 'Allowance', ammount: 0 },
-                { category: 'Bonus', ammount: 0 }
-            ],
+            accountsTypes:[],
+            item: '',
             hideMenu: true,
             showOptions: true,
             showAccSet: true,
             showAddRemSet: true,
             chartObj: null,
         }
-    },
-
-    mounted() {
-        this.chartObj = new Chart(
-            document.getElementById('acquisitions'),
-            {
-                type: 'doughnut',
-                data: {
-                    labels: this.explicitExpenseCategories.map(row => row.category),
-                    datasets: [
-                        {
-                            label: 'Acquisitions by year',
-                            data: this.explicitExpenseCategories.map(row => row.ammount)
-                        }
-                    ]
-                }
-            }
-        );
     },
 
     methods: {
@@ -227,15 +204,41 @@ export default {
             this.headingsForDetails[1].ammount = this.headingsForDetails[1].ammount + parseInt(data.ammount)
             this.headingsForDetails[2].ammount = this.headingsForDetails[2].ammount - parseInt(data.ammount)
         },
+
         signOut(){
             const auth = getAuth();
             signOut(auth).then(() => {
             // Sign-out successful.
             this.$emit('signedOut')
             }).catch((error) => {
-            // An error happened.
+            alert(error)
             });
-        }
+        },
+
+        readDataFromDB(){
+            const db = getDatabase();
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user !== null) {
+            const printdata = ref(db, 'users/' + user.uid);
+            onValue(printdata, (snapshot) => {
+            const data = snapshot.val();
+            console.log(data)
+            });
+            }
+        },
+
+        addAccountIDinDatabase(){
+            this.accountsTypes.push(this.item)
+            this.item = ''
+            const myuuid = uuidv4()
+            const db = getDatabase()
+            const auth = getAuth()
+            const user = auth.currentUser
+            set(ref(db, 'accounts/' + user.uid),{
+                account_1: myuuid
+            })
+        },
     },
 }
 </script>

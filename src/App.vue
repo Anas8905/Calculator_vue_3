@@ -9,7 +9,6 @@
             <h1 class="text-3xl mt-1 float-left mr-auto">Budget Buddy</h1>
         </div>
 
-
         <!--Form For Signing up-->
         <div :class="{hidden: isSignUp}"  >
             <form class="border-2 border-gray-300 mx-2" @submit.prevent="createUserAuth, writeUserData">
@@ -20,13 +19,12 @@
                     <input v-model="name" class="inpt" type="text" placeholder="First Name">
                     <label>Password :</label>
                     <input v-model="password" class="inpt" type="password" placeholder="Enter your Password">
-                    <button class="rounded-sm p-1 mx-28  inline-block bg-green-400 text-white" type="submit">Sign Up</button>
+                    <button @click="createUserAuth" class="rounded-sm p-1 mx-28  inline-block bg-green-400 text-white" type="submit">Sign Up</button>
                 </div>
             </form>
             <p>Already Have An Account? <span class="text-blue-600" @click="toggleisSignIn" >Sign In</span></p>
         </div>
-        
-
+    
         <!--Form For Signing In-->
         <div :class="{hidden: isSignIn}" >
             <form class="border-2 border-gray-300 mx-2"  @submit.prevent="signInUserAuth">
@@ -43,13 +41,13 @@
     </div>
     <MainDashboard 
     :class="{hidden: isLogIn}"
-    @signedOut = "signedOutUser"
+    @signedOut = "handleSignOut"
     />
 </template>
 
 <script>
 import MainDashboard from "./components/MainDashboard.vue";
-import {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth"
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth"
 import { ref, set, getDatabase } from "firebase/database";
 
 export default {
@@ -66,30 +64,30 @@ export default {
             isLogIn: true
         }
     },
-    created() {
-    this.authStateCange();
-    },
     
     methods:{
         toggleisSignUp(){
             this.isSignUp = false
             this.isSignIn = true
         },
+
         toggleisSignIn(){
             this.isSignIn = false
             this.isSignUp = true
         },
+
         createUserAuth(){
             const auth = getAuth();
             createUserWithEmailAndPassword(auth, this.email, this.password)
             .then((userCredential) => {
-                // Signed in 
-                const user = userCredential.user;
-                this.email = ''
-                this.password = ''
-                alert('Welcome Now Sign in')
-                console.log(user)
-                this.toggleisSignIn()
+            // Signed in 
+            this.authStateCange(this.email, this.name)
+            this.email = ''
+            this.password = ''
+            this.name = ''
+            const user = userCredential.user;
+            alert('Welcome Now Sign in')
+            console.log(user)
             })
             .catch((error) => {
                 const errorCode = error.code;
@@ -98,7 +96,8 @@ export default {
                 alert(errorMessage)
             });
         },
-        signInUserAuth(){
+
+        signInUserAuth() {
             const auth = getAuth();
             signInWithEmailAndPassword(auth, this.email, this.password)
             .then((userCredential) => {
@@ -116,30 +115,43 @@ export default {
                 alert(errorMessage)
             });    
         },
-        authStateCange(){
+        
+        authStateCange(email, name){
             const auth = getAuth();
             onAuthStateChanged(auth, (user) => {
             if (user) {
+                this.toggleisSignIn()
                 const uid = user.uid;
-                console.log(uid)
+                this.writeUserData(uid, name, email)
                 // ...
             } else {
-                // User is signed out
-                // ...
+                alert('error')
             }
             });
         },
-        signedOutUser(){
+
+        handleSignOut(){
             this.isLogIn = true
         },
-        writeUserData(userId, name, email, imageUrl) {
-        const db = getDatabase();
-        set(ref(db, 'users/' + userId), {
-            username: name,
-            email: email,
-            profile_picture : imageUrl
-        });
-        }
+
+        writeUserData(userId, name, email) {
+            const db = getDatabase();
+            set(ref(db, 'users/' + userId), {
+                username: name,
+                email: email,
+                income_categories: {
+                    salary: 'Salary',
+                    pension: 'Pension',
+                    bonus: 'Bonus'
+                },
+                expense_incomes: {
+                    grocery: 'Groceries',
+                    transport: 'Transport',
+                    housing: 'Housing',
+                    education: 'Education'
+                }
+            });
+        },
     }
 }
 </script>

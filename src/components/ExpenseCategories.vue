@@ -1,8 +1,8 @@
 <template>
 <div>
-    <h2 class="ml-1">Select Category:</h2>
 
     <!--List Of Expense Categories-->
+    <h2 class="ml-1">Select Category:</h2>
     <div class="ml-2 grid grid-rows gap-0">
         <label v-for="(item, index) in expenseCategories" :key="index" :for="index">
             <input class="inline" type="radio" :value="item.category" v-model="el.category">
