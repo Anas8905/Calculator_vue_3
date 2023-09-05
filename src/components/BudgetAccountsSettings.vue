@@ -8,55 +8,23 @@
             <h1 class="text-3xl mt-1 float-left mr-auto">Budget Buddy</h1>
         </div>
         
-            <!--Wallet Types-->
-        <div v-show="displayWallets === true" class="ml-2 grid grid-cols-4  gap-0">
-            <label for="Cash">
-                <input v-model="wallet" value="Cash" id="Cash" type="radio">
-                Cash
-            </label>
-            <label for="Card">
-                <input v-model="wallet" value="Card" id="Card" type="radio">
-                Card
-            </label>
-            <label for="Bank">
-                <input v-model="wallet" value="Bank" id="Bank" type="radio">
-                Bank
-            </label>
-            <button @click="toggleWalletCategories" class="rounded-sm bg-green-400 text-white mr-1" type="button">
-                Select
-            </button>
-        </div>
         <!--Budget Types-->
-        <div v-show="displayWallets === false">
-            <div class="content-center m-4">
-                <button @click="toggleWalletCategories" class="rounded-sm bg-green-400 text-white px-2" type="button">
-                    Change Wallet
-                </button>
-            </div>
             <div class="flex justify-evenly">
-                <h3 @click="toggleIncomes" class="headings3" >Income</h3>
-                <h3 @click="toggleExpense" class="headings3" >Expense</h3>
-                <h3 @click="toggleTransfer" class="headings3" >Transfer</h3>
+                <button @click="toggleIncomes" class="headings3" >Income</button>
+                <button @click="toggleExpense" class="headings3" >Expense</button>
+                <button @click="toggleTransfer" class="headings3" >Transfer</button>
             </div>
 
-            <ExpenseCategories  
-            :expenseCategories="expenseCategories" 
-            :class="{hidden: displayExpenses}" 
-            @increment-expense="evaluateTotalExpense" 
-            />
+            <ExpenseCategories :class="{hidden: displayExpenses}" />
 
-            <IncomeCategories 
-            :incomeCategories="incomeCategories" 
-            :class="{hidden: displayIncomes}" 
-            @increment-income="evaluateTotalIncome" 
-            />
+            <IncomeCategories :class="{hidden: displayIncomes}" />
 
             <TransferCategories :class="{hidden: displayTransfers}" />
-        </div>
     </div>
 </template>
 
 <script>
+// import { ref, set, getDatabase } from "firebase/database";
 import ExpenseCategories from "./ExpenseCategories.vue"
 import IncomeCategories from "./IncomeCtegories.vue"
 import TransferCategories from "./TransferCategories.vue"
@@ -69,19 +37,13 @@ export default{
         IncomeCategories,
         TransferCategories,
     },
-
-    props: {
-        expenseCategories: Object,
-        incomeCategories: Object,
-    },
-
+    
     data() {
         return {
             wallet: '',
             displayExpenses: false,
             displayIncomes: true,
             displayTransfers: true,
-            displayWallets: true
         }
     },
 
@@ -103,18 +65,6 @@ export default{
             this.displayIncomes = true
             this.displayTransfers = false
         },
-
-        evaluateTotalExpense(data){
-            this.$emit('increment-expense', data)
-        },
-
-        evaluateTotalIncome(data){
-            this.$emit('increment-income', data)
-        },
-
-        toggleWalletCategories(){
-            this.displayWallets = !this.displayWallets
-        }
     }
 }
 </script>

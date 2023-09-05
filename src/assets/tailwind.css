@@ -15,11 +15,11 @@
     @apply rotate-180;
 }
 .headings3{
-    @apply border-2 border-sky-200 rounded-md px-2 hover:border-sky-400;
+    @apply border-2 border-sky-200 rounded-md px-2 hover:border-sky-400 hover:px-4;
 }
 .custom-hidden{
     @apply hidden
 }
 .inpt{
-    @apply border-2 rounded-md border-gray-200 bg-gray-100 w-52;  
+    @apply border-2 rounded-md border-gray-200 bg-gray-100 w-52 m-4;  
 }

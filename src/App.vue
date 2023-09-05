@@ -41,6 +41,7 @@
     </div>
     <MainDashboard 
     :class="{hidden: isLogIn}"
+    :accountUUID = "accountUUID"
     @signedOut = "handleSignOut"
     />
 </template>
@@ -49,13 +50,17 @@
 import MainDashboard from "./components/MainDashboard.vue";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth"
 import { ref, set, getDatabase } from "firebase/database";
+import {v4 as uuidv4} from 'uuid';
 
 export default {
     name: "App",
-    components: { MainDashboard },
     emits:['signedOut'],
+    
+    components: { MainDashboard },
+
     data(){
         return {
+            accountUUID : uuidv4(),
             isSignUp : false,
             isSignIn : true,
             email: '',
@@ -140,18 +145,26 @@ export default {
                 username: name,
                 email: email,
                 income_categories: {
-                    salary: 'Salary',
-                    pension: 'Pension',
-                    bonus: 'Bonus'
+                    Salary: 'Salary',
+                    Pension: 'Pension',
+                    Bonus: 'Bonus'
                 },
-                expense_incomes: {
-                    grocery: 'Groceries',
-                    transport: 'Transport',
-                    housing: 'Housing',
-                    education: 'Education'
+                expense_categories: {
+                    Groceries: 'Groceries',
+                    Transport: 'Transport',
+                    Housing: 'Housing',
+                    Education: 'Education'
                 }
             });
+            set(ref(db, 'accounts/' + userId), {
+                account : this.accountUUID
+            });
+            set(ref(db, 'wallets/' + this.accountUUID),{
+                Card: 'Card',
+                Cash: 'Cash',
+                Bank: 'Bank'
+            })
+            }
         },
     }
-}
 </script>
