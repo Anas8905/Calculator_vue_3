@@ -33,6 +33,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
             </div>
+
                     <!--Bottom Options-->
             <div>
                 <div class="inline-flex justify-evenly w-full bg-gray-500 rounded">
@@ -136,7 +137,8 @@ export default {
             this.hideMenu = true;
         },
 
-        signOutUser(){
+        signOutUser() {
+            this.hideMenu = true;
             const auth = getAuth();
             const user = auth.currentUser;
             if (user !== null) {

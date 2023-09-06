@@ -1,73 +1,59 @@
 <template>
-<div>
-
-    <!--Read From DataBase and dislay Expense Categories-->
-    <!--List Of Expense Categories-->
-    <div class="ml-2 grid grid-rows gap-0">
-        <h2>Select Category:</h2>
-            <label for="Grocery">
-                <input v-model="category" value="Grocery" id="Grocery" type="radio">
-                Grocery
-            </label>
-            <label for="Housing">
-                <input v-model="category" value="Housing" id="Housing" type="radio">
-                Housing
-            </label>
-            <label for="Utilities">
-                <input v-model="category" value="Utilities" id="Utilities" type="radio">
-                Utilities
-            </label>
-            <label for="Petrol">
-                <input v-model="category" value="Petrol" id="Petrol" type="radio">
-                Petrol
-            </label>
-    </div>
-    <!--Read From DataBase and dislay Expense Categories-->
-
-    <h1>Select Wallet Type</h1>
-    <!-- Wallet Types-->
-    <div class="ml-2 grid grid-cols-4  gap-0">
-        <label for="Cash">
-            <input v-model="wallet" value="Cash" id="Cash" type="radio">
-            Cash
-        </label>
-        <label for="Card">
-            <input v-model="wallet" value="Card" id="Card" type="radio">
-            Card
-        </label>
-        <label for="Bank">
-            <input v-model="wallet" value="Bank" id="Bank" type="radio">
-            Bank
-        </label>
-    </div>
-
     <div>
-        <h2 class="ml-1">Enter Amount:</h2>
-        <input @keyup.enter="addExpense" v-model="amount" class="border-4 border-gray-300 m-1" type="text">
-        <button class="bg-gray-400 text-white border-2 border-gray-300 rounded-lg pb-0 px-2" @click="addTransaction">
-            Add
-        </button>
+        <!--List Of Expense Categories-->
+        <button @click="showExpenseCategories" type="button" class="ml-2 my-2 text-base font-semibold">Select Expense Category:</button>
+        <div class="ml-2 grid grid-rows gap-0">
+            <label v-for="(item, index) in expenseCategories" :key="index" :for="'category_' + index">
+                <input v-model="category" :value="item" :id="'category_' + index" type="radio">
+                {{ item }}
+            </label>
+        </div>
+
+        <!-- Wallet Types-->
+        <button @click="showWalletCategories" type="button" class="ml-2 my-2 text-base font-semibold">Select Wallet Type:</button>
+        <div class="ml-2 grid grid-cols-4 gap-0">
+            <label v-for="(item, index) in walletTypes" :key="index" :for="'category' + index"> 
+                <input v-model="wallet" :value="item" :id="'category' + index" type="radio">
+                {{ item }}
+            </label>
+        </div>
+
+        <!--Let user write Descriptions-->
+        <div>
+            <h2 class="ml-2 text-base font-semibold">Any Description?</h2>
+            <input v-model="description" class="border-4 border-gray-300 m-1" type="text">
+        </div>
+
+        <!--Add transaction to Darabase-->
+        <div>
+            <h2 class="ml-2 text-base font-semibold">Enter Amount:</h2>
+            <input @keyup.enter="addTransaction" v-model="amount" class="border-4 border-gray-300 m-1" type="text">
+            <button class="bg-gray-400 text-white border-2 border-gray-300 rounded-lg px-1 pb-0" @click="addTransaction">
+                Add
+            </button>
+        </div>
     </div>
-</div>
 </template>
 
 <script>
-import {
-    v4 as uuidv4
-} from 'uuid';
-import {getAuth } from "firebase/auth"
-import { ref, set, getDatabase } from "firebase/database";
+import {v4 as uuidv4} from 'uuid';
+import { getAuth } from "firebase/auth"
+import { ref, set, getDatabase, onValue } from "firebase/database";
 export default {
     name: 'ExpenseCategories',
     data() {
         return {
-            wallet: '',
+            expenseCategories: [],
+            walletTypes: [],
             amount: '',
-            category: ''
+            wallet: '',
+            category: '',
+            description: '',
         }
     },
+
     methods: {
-        addTransaction() {
+        addTransaction(){
             const auth = getAuth()
             const user = auth.currentUser
             const db = getDatabase()
@@ -78,15 +64,52 @@ export default {
             const myuuid = uuidv4()
             const transactionPath = `transactions/${user.uid}/${year}/${month}/${day}/${myuuid}`;
             set(ref(db, transactionPath), {
-                transaction_type: 'income',
+                transaction_type: 'Expense',
                 source_wallet: this.wallet,
-                destination_wallet: 'accounts_id',
                 amount: this.amount,
                 Category: this.category,
-                description: '.......'
+                description: this.description
             })
-            console.log(year)
-        }
+            this.amount = ''
+            this.category = ''
+            this.wallet = ''
+            this.description = ''
+        },
+
+        showExpenseCategories() {
+            const auth = getAuth()
+            const user = auth.currentUser
+            const db = getDatabase()
+
+            // reading expense_categories from database
+            const expenseCategoriesRef = ref(db, `users/${user.uid}/expense_categories`);
+            onValue(expenseCategoriesRef, (snapshot) => {
+                const data = snapshot.val()
+                if (data !== null) {
+                    this.expenseCategories = Object.keys(data)
+                }
+                else {
+                    console.log("Something wrong")
+                }
+                });
+        },
+
+        showWalletCategories() {
+            const auth = getAuth()
+            const user = auth.currentUser
+            const db = getDatabase()
+            // reading wallets from database
+            const dataRef = ref(db, 'accounts/' + user.uid);
+            onValue(dataRef, (snapshot) => {
+            const data = snapshot.val()
+            const accountID = data.account
+            const walletCategoriesRef = ref(db, `wallets/${accountID}`)
+            onValue(walletCategoriesRef, (snapshot) => {
+                const wallets = snapshot.val()
+                this.walletTypes = Object.keys(wallets)
+            })
+            })
+        },
     }
 }
 </script>

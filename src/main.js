@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
+// import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC9hvhfaUKGiXo5RqYsxxTnXBQoF9GxEM4",
@@ -21,4 +21,4 @@ getAuth(app)
 createApp(App).mount('#app')
 
 // Initialize Realtime Database and get a reference to the service
-const db = getDatabase(app);
+// const db = getDatabase(app);

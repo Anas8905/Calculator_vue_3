@@ -8,7 +8,7 @@
         </svg>
         <h1 class="text-3xl mt-1 float-left mr-auto">Budget Buddy</h1>
     </div>
-    <h2 class="text-center">Select the type to add or remove categories :</h2>
+    <h2 class="text-center text-base font-semibold">Select the type to add or remove categories :</h2>
 
     <div class="grid grid-flow-row text-center">
         <!--Div for Expense's settings-->
