@@ -36,12 +36,13 @@
                     <button class="rounded-sm p-1 mx-28  inline-block bg-green-400 text-white" type="submit">Sign In</button>
                 </div>
             </form>
-            <p>Create An Account <span  class="text-blue-600" @click="this.toggleisSignUp">Sign Up</span></p>
+            <p>Create An Account <span  class="text-blue-600" @click="toggleisSignUp">Sign Up</span></p>
         </div>
     </div>
     <MainDashboard 
     :class="{hidden: isLogIn}"
     :accountUUID = "accountUUID"
+    :headings = "headings"
     @signedOut = "handleSignOut"
     />
 </template>
@@ -49,24 +50,24 @@
 <script>
 import MainDashboard from "./components/MainDashboard.vue";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged} from "firebase/auth"
-import { ref, set, getDatabase } from "firebase/database";
+import { ref, set, getDatabase, onValue } from "firebase/database";
 import {v4 as uuidv4} from 'uuid';
 
 export default {
     name: "App",
-    emits:['signedOut'],
     
     components: { MainDashboard },
 
     data(){
         return {
+            headings: {},
             accountUUID : uuidv4(),
             isSignUp : false,
             isSignIn : true,
             email: '',
             password: '',
             name:'',
-            isLogIn: true
+            isLogIn: true,
         }
     },
     
@@ -103,7 +104,7 @@ export default {
         },
 
         signInUserAuth() {
-            const auth = getAuth();
+            const auth = getAuth()
             signInWithEmailAndPassword(auth, this.email, this.password)
             .then((userCredential) => {
                 // Signed in 
@@ -111,12 +112,10 @@ export default {
                 this.password = ''
                 this.isLogIn = !this.isLogIn
                 const user = userCredential.user;
-                console.log(user)
+                this.updateHeadings(user.uid)
             })
             .catch((error) => {
-                const errorCode = error.code;
                 const errorMessage = error.message;
-                alert(errorCode)
                 alert(errorMessage)
             });    
         },
@@ -145,25 +144,38 @@ export default {
                 username: name,
                 email: email,
                 income_categories: {
-                    Salary: 'Salary',
-                    Pension: 'Pension',
-                    Bonus: 'Bonus'
+                    Salary: 0,
+                    Pension: 0,
+                    Bonus: 0
                 },
                 expense_categories: {
-                    Groceries: 'Groceries',
-                    Transport: 'Transport',
-                    Housing: 'Housing',
-                    Education: 'Education'
+                    Groceries: 0,
+                    Transport: 0,
+                    Housing: 0,
+                    Education: 0
+                },
+                headings: { 
+                    income: 0,
+                    expense: 0,
+                    total: 0
                 }
             });
             set(ref(db, 'accounts/' + userId), {
                 account : this.accountUUID
             });
             set(ref(db, 'wallets/' + this.accountUUID),{
-                Card: 'Card',
-                Cash: 'Cash',
-                Bank: 'Bank'
+                Card: 0,
+                Cash: 0,
+                Bank: 0
             })
+            },
+
+            updateHeadings(id) {
+                const db = getDatabase()
+                onValue(ref(db, `users/${id}/headings`), (snapshot) => {
+                    const heading = snapshot.val()
+                    this.headings = heading
+                })
             }
         },
     }

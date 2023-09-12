@@ -15,9 +15,15 @@
                 <button @click="toggleTransfer" class="headings3" >Transfer</button>
             </div>
 
-            <ExpenseCategories :class="{hidden: displayExpenses}" />
+            <ExpenseCategories
+            :class="{hidden: displayExpenses}"
+            @fetchExpenseUpdate="fetchExpenseUpdate"
+             />
 
-            <IncomeCategories :class="{hidden: displayIncomes}" />
+            <IncomeCategories 
+            :class="{hidden: displayIncomes}" 
+            @fetchIncomeUpdate="fetchIncomeUpdate"
+            />
 
             <TransferCategories :class="{hidden: displayTransfers}" />
     </div>
@@ -31,6 +37,8 @@ import TransferCategories from "./TransferCategories.vue"
 
 export default{
     name: "BudgetAccountsSettings", 
+
+    emit: ['fetchExpenseUpdate', 'fetchIncomeUpdate'],
 
     components: {
         ExpenseCategories,
@@ -65,6 +73,14 @@ export default{
             this.displayIncomes = true
             this.displayTransfers = false
         },
+
+        fetchExpenseUpdate(data) {
+            this.$emit('fetchExpenseUpdate', data)
+        },
+
+        fetchIncomeUpdate(data) {
+            this.$emit('fetchIncomeUpdate', data)
+        }
     }
 }
 </script>

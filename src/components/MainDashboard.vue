@@ -34,13 +34,13 @@
                 </svg>
             </div>
 
-                    <!--Bottom Options-->
             <div>
+                <!--Headings-->
                 <div class="inline-flex justify-evenly w-full bg-gray-500 rounded">
-                    <h1 class="headings2">Income: </h1>
-                    <h1 class="headings2">Expense: </h1>
-                    <h1 class="headings2">Total: </h1>
+                    <h1 v-for="(value, key) in headings" :key="key" class="headings2">{{ key }} : {{ value }}</h1>
                 </div>
+
+                <!--Bottom Options-->
                 <div class="text-white flex justify-evenly absolute inset-x-0 bottom-0 h-7 bg-gray-700 w-auto">
                     <h3>Stats</h3>
                     <h3>Wallets</h3>
@@ -67,7 +67,11 @@
         </div>
 
         <!-- BudgetAccountsSettings -->
-        <BudgetAccountsSettings v-show="showOptions === false"/>
+        <BudgetAccountsSettings 
+        v-show="showOptions === false"
+        @fetchIncomeUpdate="evaluationFunction"
+        @fetchExpenseUpdate="evaluationFunction" 
+        />
         
         <CategoriesSettings 
             v-if="showAddRemSet === false" 
@@ -85,13 +89,14 @@ import UserAccountSettings from './UserAccountSettings.vue'
 import CategoriesSettings from './CategoriesSettings.vue'
 // import Chart from 'chart.js/auto';
 import { getAuth, signOut } from "firebase/auth";
-// import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, update, get } from "firebase/database";
 
 export default {
     name: 'MainDashboard',
-    emits: ['hide-add-remove-set'],
+    emits: ['hide-add-remove-set', 'signedOut', 'fetchExpenseUpdate', 'fetchIncomeUpdate'],
     props: {
-        accountUUID: String
+        accountUUID: String,
+        headings: Object
     },
     
     components: {
@@ -102,7 +107,6 @@ export default {
 
     data() {
         return {
-            checkedAccounts:[],
             item: '',
             hideMenu: true,
             showOptions: true,
@@ -140,7 +144,7 @@ export default {
         signOutUser() {
             this.hideMenu = true;
             const auth = getAuth();
-            const user = auth.currentUser;
+            const user = auth.currentUser
             if (user !== null) {
                 signOut(auth)
                     .then(() => {
@@ -151,6 +155,73 @@ export default {
                     });
             }
         },
-    },
+
+        evaluationFunction(data) {
+        let amount;
+        const db = getDatabase();
+        const auth = getAuth();
+        const user = auth.currentUser;
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const transactionRef = ref(db, `transactions/${user.uid}/${year}/${month}/${day}/${data}`)
+        if (user !== null) {
+            // Use get() to fetch data from the specified database reference
+            get(transactionRef)
+            .then((snapshot) => {
+                if (snapshot.exists() && snapshot.val().transaction_type === "expense") {
+                    const transaction = snapshot.val();
+                    amount = parseInt(transaction.amount);
+                    const headingsRef = ref(db, `users/${user.uid}/headings`)
+                    get(headingsRef)
+                        .then((snapshot) => {
+                            const headings = snapshot.val();
+                            const ttl = parseInt(headings.total) - amount;
+                            const ex = parseInt(headings.expense) + amount;
+                            update(headingsRef, {
+                                expense: ex,
+                                total: ttl
+                            })
+                            update()
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                    })
+                } 
+                else if (snapshot.exists() && snapshot.val().transaction_type === "income") {
+                    const transaction = snapshot.val();
+                    amount = parseInt(transaction.amount);
+                    const headingsRef = ref(db, `users/${user.uid}/headings`);
+
+                    get(headingsRef)
+                        .then((snapshot) => {
+                            const headings = snapshot.val();
+                            const totl = parseInt(headings.total) + amount;
+                            const inc = parseInt(headings.income) + amount;
+    
+                            update(headingsRef, {
+                                income: inc,
+                                total: totl
+                            })
+                            .then(() => {
+                                alert('Success')
+                            })
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                } 
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        }
+        else {
+            console.log("No data available");
+            }
+        }
+
+    }
 }
 </script>
