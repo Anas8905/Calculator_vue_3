@@ -17,7 +17,7 @@
         <div :class="{hidden: hideExpense}">
             <div>
                 <h2 class="text-lg font-semibold ">Add category in Expenses</h2>
-                <input v-model="expenseItem" class="inpt mx-2" type="text">
+                <input v-model="item" class="inpt mx-2" type="text">
                 <button @click="addExpenseInDataBase" class="bg-gray-400 text-white border-2 border-gray-300 rounded-lg px-1 pb-0" type="button">Add</button>
             </div>
         </div>
@@ -27,7 +27,7 @@
         <div :class="{hidden: hideIncome}">
             <div>
                 <h2 class="text-lg font-semibold">Add category in Incomes</h2>
-                <input v-model="incomeItem" type="text" class="inpt mx-2">
+                <input v-model="item" type="text" class="inpt mx-2">
                 <button @click="addIncomeInDataBase" class="bg-gray-400 text-white border-2 border-gray-300 rounded-lg px-1 pb-0" type="button">Add</button>
             </div>
         </div>
@@ -37,7 +37,7 @@
         <div>
             <div :class="{hidden: hideWallets}">
                 <h2 class="text-lg font-semibold">Add category in Wallets</h2>
-                <input v-model="walletItem" type="text" class="inpt mx-2">
+                <input v-model="item" type="text" class="inpt mx-2">
                 <button @click="addWalletInDatabase" class="bg-gray-400 text-white border-2 border-gray-300 rounded-lg px-1 pb-0" type="button">Add</button>
             </div>
         </div>
@@ -54,24 +54,30 @@
 
 <script>
 import { ref, getDatabase, update, get } from "firebase/database";
-import { getAuth } from "firebase/auth";
 export default {
+
     name: 'CategoriesSettings',
 
     data() {
         return {
-            expenseItem: '',
-            expenseObj: {},
-            incomeItem: '',
-            incomeObj: {},
-            walletItem: '',
-            walletObj: {},
-            check: {},
+            item: '',
+            Obj: {},
             accountID: '',
             hideExpense: true,
             hideIncome: true,
             hideWallets: true,
 
+        }
+    },
+
+    beforeMount(){
+        this.$store.commit('userIDReader')
+    },
+
+//getting userID from Vuex Store
+    computed:{
+        userID(){
+            return this.$store.state.userID
         }
     },
 
@@ -99,31 +105,18 @@ export default {
         },
 
         addIncomeInDataBase() {
-            const auth = getAuth()
-            const user = auth.currentUser
             const db = getDatabase()
 
             // Path for income_categories Node
-            get(ref(db, `users/${user.uid}/income_categories`))
+            get(ref(db, `users/${this.userID}/income_categories`))
                 .then((snapshot) => {
                     if (snapshot.exists()) {
 
                         //Read and store income_category Node from database in 'this.check' variabe to check
                         //the category is already existed or not
                         this.check = snapshot.val()
-                        if (this.incomeItem in this.check === false) {
-                            this.incomeObj[this.incomeItem] = 0
-                            this.incomeItem = ''
-                            const updates = this.incomeObj
-                            update(ref(db, 'users/' + user.uid + '/income_categories'), updates)
-                                .then(() => {
-                                    this.incomeObj = {}
-                                    this.showIncomes()
-                                })
-                        }
-                        else {
-                            alert('Category Already Present')
-                        }
+                        const path = ref(db, 'users/' + this.userID + '/income_categories')
+                        this.updateCategory(this.item, this.check, this.Obj, path, "income")
                     }
                     else {
                         alert("Something Wrong")
@@ -135,34 +128,20 @@ export default {
         },
 
         addExpenseInDataBase() {
-            const auth = getAuth()
-            const user = auth.currentUser
             const db = getDatabase()
 
             // Path for expense_categories Node
-            get(ref(db, `users/${user.uid}/expense_categories`))
+            get(ref(db, `users/${this.userID}/expense_categories`))
                 .then((snapshot) => {
                     if (snapshot.exists()) {
 
                         //Read and store expense_category Node from database in 'this.check' variabe to check
                         //the category is already existed or not
                         this.check = snapshot.val()
-                        if (this.expenseItem in this.check === false) {
-                            this.expenseObj[this.expenseItem] = 0
-                            this.expenseItem = ''
-                            const updates = this.expenseObj
-                            update(ref(db, `users/${user.uid}/expense_categories`), updates)
-                                .then(() => {
-                                    this.expenseObj = {}
-                                    this.showExpenses()
-                                })
-                                .catch((error) => {
-                                    console.log(error)
-                                })
-                        } 
-                        else {
-                            alert('Category Already Present')
-                        }
+                        const path = ref(db, 'users/' + this.userID + '/expense_categories')
+
+                        //Updating using helper function
+                        this.updateCategory(this.item, this.check, this.Obj, path, "expense")
                     } 
                     else {
                         alert("Something Wrong")
@@ -175,9 +154,7 @@ export default {
 
         addWalletInDatabase() {
             const db = getDatabase()
-            const auth = getAuth()
-            const user = auth.currentUser
-            const dbRef = ref(db, `accounts/${user.uid}`)
+            const dbRef = ref(db, `accounts/${this.userID}`)
 
             // Firstly, finding out the account ID of current user
             get(dbRef)
@@ -192,21 +169,8 @@ export default {
                             .then((snapshot) => {
                                 if (snapshot.exists()) {
                                     this.check = snapshot.val()
-                                    if (this.walletItem in this.check === false) {
-                                        this.walletObj[this.walletItem] = 0
-                                        this.walletItem = ''
-                                        const updates = this.walletObj
-
-                                        //update the new category in "wallets/users's accountId"
-                                        update(ref(db, `wallets/${this.accountID}`), updates)
-                                            .then(() => {
-                                                this.showWallets()
-                                                this.walletObj = {}
-                                            })
-                                    } 
-                                    else {
-                                        alert('Category Already Present')
-                                    }
+                                    const path = ref(db, `wallets/${this.accountID}`)
+                                    this.updateCategory(this.item, this.check, this.Obj, path, "wallet")
                                 } 
                                 else {
                                     alert("Something Wrong with Wallet Path")
@@ -223,6 +187,33 @@ export default {
                 .catch((error) => {
                     alert(error)
                 })
+        },
+
+        updateCategory(item, check, obj, path, type) {
+            if (item in check === false) {
+                obj[item] = 0
+                const updates = obj
+                update(path, updates)
+                    .then(() => {
+                        if(type === "expense") {
+                            this.showExpenses()
+                        }
+                        else if(type === "income") {
+                            this.showIncomes()
+                        }
+                        else {
+                            this.showWallets()
+                        }
+                        this.item = ''
+                        this.Obj = {}
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                    })
+            } 
+            else {
+                alert('Category Already Present')
+            }
         }
     }
 }

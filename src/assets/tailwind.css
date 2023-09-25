@@ -23,3 +23,6 @@
 .inpt{
     @apply border-2 rounded-md border-gray-200 bg-gray-100 w-52 m-4;  
 }
+.radiobtn{
+    @apply w-3 h-3 text-blue-600 bg-gray-100 border-gray-200  
+}

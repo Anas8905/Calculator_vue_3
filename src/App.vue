@@ -70,6 +70,16 @@ export default {
             isLogIn: true,
         }
     },
+
+    beforeMount() {
+        this.$store.commit('userIDReader')
+    },
+
+    computed: {
+        check() {
+            return this.$store.state.userID
+        }
+    },
     
     methods:{
         toggleisSignUp(){
@@ -117,7 +127,7 @@ export default {
             .catch((error) => {
                 const errorMessage = error.message;
                 alert(errorMessage)
-            });    
+            })
         },
         
         authStateCange(email, name){
@@ -127,8 +137,8 @@ export default {
                 this.toggleisSignIn()
                 const uid = user.uid;
                 this.writeUserData(uid, name, email)
-                // ...
-            } else {
+            } 
+            else {
                 alert('error')
             }
             });

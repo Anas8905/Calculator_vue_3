@@ -4,16 +4,16 @@
     <button @click="showExpenseCategories" type="button" class="ml-2 my-2 text-base font-semibold">Select Expense Category:</button>
     <div class="ml-2 grid grid-rows gap-0">
         <label v-for="(item, index) in expenseCategories" :key="index" :for="'category_' + index">
-            <input v-model="category" :value="item" :id="'category_' + index" type="radio">
+            <input class="radiobtn" v-model="category" :value="item" :id="'category_' + index" type="radio">
             {{ item }}
         </label>
     </div>
 
     <!-- Wallet Types-->
-    <button @click="showWalletCategories" type="button" class="ml-2 my-2 text-base font-semibold">Select Wallet Type:</button>
+    <h2 class="ml-2 my-2 text-base font-semibold">Select Wallet Type:</h2>
     <div class="ml-2 grid grid-cols-4 gap-0">
-        <label v-for="(item, index) in walletTypes" :key="index" :for="'category' + index">
-            <input v-model="wallet" :value="item" :id="'category' + index" type="radio">
+        <label v-for="(item, index) in walletCategories" :key="index" :for="'category' + index">
+            <input class="radiobtn" v-model="wallet" :value="item" :id="'category' + index" type="radio">
             {{ item }}
         </label>
     </div>
@@ -38,17 +38,31 @@
 <script>
 import { v4 as uuidv4 } from 'uuid';
 import { getAuth } from "firebase/auth"
-import { ref, set, getDatabase, onValue } from "firebase/database";
+import { ref, set, getDatabase } from "firebase/database";
 export default {
+    /* eslint-disable */
     name: 'ExpenseCategories',
     data() {
         return {
-            expenseCategories: [],
-            walletTypes: [],
             amount: '',
             wallet: '',
             category: '',
             description: '',
+        }
+    },
+
+    beforeMount() {
+        this.$store.commit('showWalletCategories')
+        this.$store.commit('showExpense_And_EncomeCategories')
+    },
+
+    computed: {
+        walletCategories() {
+            return this.$store.state.walletCategories
+        },
+
+        expenseCategories() {
+            return this.$store.state.expenseCategories
         }
     },
 
@@ -75,41 +89,6 @@ export default {
             this.wallet = ''
             this.description = ''
             this.$emit('fetchExpenseUpdate', myuuid)
-        },
-
-        showExpenseCategories() {
-            const auth = getAuth()
-            const user = auth.currentUser
-            const db = getDatabase()
-
-            // reading expense_categories from database
-            const expenseCategoriesRef = ref(db, `users/${user.uid}/expense_categories`);
-            onValue(expenseCategoriesRef, (snapshot) => {
-                const data = snapshot.val()
-                if (data !== null) {
-                    this.expenseCategories = Object.keys(data)
-                } 
-                else {
-                    console.log("Something wrong")
-                }
-            });
-        },
-
-        showWalletCategories() {
-            const auth = getAuth()
-            const user = auth.currentUser
-            const db = getDatabase()
-            // reading wallets from database
-            const dataRef = ref(db, 'accounts/' + user.uid);
-            onValue(dataRef, (snapshot) => {
-                const data = snapshot.val()
-                const accountID = data.account
-                const walletCategoriesRef = ref(db, `wallets/${accountID}`)
-                onValue(walletCategoriesRef, (snapshot) => {
-                    const wallets = snapshot.val()
-                    this.walletTypes = Object.keys(wallets)
-                })
-            })
         },
     }
 }
