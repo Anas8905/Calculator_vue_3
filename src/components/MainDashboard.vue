@@ -87,9 +87,9 @@
 import BudgetAccountsSettings from './BudgetAccountsSettings.vue';
 import UserAccountSettings from './UserAccountSettings.vue'
 import CategoriesSettings from './CategoriesSettings.vue'
-import Chart from 'chart.js/auto';
-import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
-import { onValue, getDatabase, ref, update, get } from "firebase/database";
+// import Chart from 'chart.js/auto';
+import { getAuth, signOut } from "firebase/auth";
+import { getDatabase, ref, update, get } from "firebase/database";
 
 export default {
     /* eslint-disable */
@@ -119,37 +119,37 @@ export default {
         }
     }, 
 
-    beforeMount() {
-        const auth = getAuth()
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    const user = auth.currentUser
-                    const db = getDatabase()
-                    const expenseCategoriesRef = ref(db, `users/${user.uid}/expense_categories`)
-                    onValue(expenseCategoriesRef, (snapshot) => {
-                        const data = snapshot.val()
-                        if (data !== null) {
-                            this.myChart = data
-                        }
-                    })
-                }
-            })
-    },
+    // beforeMount() {
+    //     const auth = getAuth()
+    //         onAuthStateChanged(auth, (user) => {
+    //             if (user) {
+    //                 const user = auth.currentUser
+    //                 const db = getDatabase()
+    //                 const expenseCategoriesRef = ref(db, `users/${user.uid}/expense_categories`)
+    //                 onValue(expenseCategoriesRef, (snapshot) => {
+    //                     const data = snapshot.val()
+    //                     if (data !== null) {
+    //                         this.myChart = data
+    //                     }
+    //                 })
+    //             }
+    //         })
+    // },
 
-    beforeUpdate() {
-        if(!this.chartObj) {
-                this.chartObj = new Chart(
-                document.getElementById('acquisitions'), 
-                { 
-                type: 'doughnut',
-                data:  {
-                labels: Object.keys(this.expensesObjForChart), 
-                datasets: [{ data: Object.values(this.expensesObjForChart) }]
-                }
-                } 
-                )
-        }
-    },
+    // beforeUpdate() {
+    //     if(!this.chartObj) {
+    //             this.chartObj = new Chart(
+    //             document.getElementById('acquisitions'), 
+    //             { 
+    //             type: 'doughnut',
+    //             data:  {
+    //             labels: Object.keys(this.expensesObjForChart), 
+    //             datasets: [{ data: Object.values(this.expensesObjForChart) }]
+    //             }
+    //             } 
+    //             )
+    //     }
+    // },
 
     computed: {
         expensesObjForChart() {
